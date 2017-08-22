@@ -32,9 +32,34 @@ def get_comp(comp):
 	# Competition was not found in list
 	return -1
 	
+def get_comp_fixtures(comp):
+	
+	# If competition does not exist
+	if comp == -1:
+		return "Invalid competition ID or name."
+	
+	# API serving point for fixtures data
+	url_fixtures = "http://api.football-data.org/v1/competitions/" + str(comp["id"]) +"/fixtures"
 
+	# Get the fixtures and iterate through them, printing completed fixtures
+	r = requests.get(url_fixtures, headers = HEADERS)
+	for fixture in r.json()["fixtures"]:
+		if fixture["status"] == "FINISHED":
+			
+			# Assign home team, away team, result and print
+
+			home = fixture["homeTeamName"]
+			away = fixture["awayTeamName"]
+			h_goals = str(fixture["result"]["goalsHomeTeam"])
+			a_goals = str(fixture["result"]["goalsAwayTeam"])
+			print("{}  {} - {}  {}".format(home.rjust(30), h_goals, a_goals, away.ljust(30)))
+	
 # Tests
-print(get_comp("Premier League")) # Should return PL data
-print(get_comp("Ligue")) # Should return -1
-print(get_comp("Ligue 1")) # Should return Ligue 1 data
-print(get_comp("")) # Should return -1 (duh..)
+#print(get_comp("Premier League")) # Should return PL data
+#print(get_comp("Ligue")) # Should return -1
+#print(get_comp("Ligue 1")) # Should return Ligue 1 data
+#print(get_comp("")) # Should return -1 (duh..)
+
+print(get_comp_fixtures(get_comp("Premier League")))
+print(get_comp_fixtures(get_comp("Ligue")))
+print(get_comp_fixtures(get_comp("Ligue 1")))
