@@ -1,6 +1,6 @@
 import datetime
 import requests
-
+from auth import HEADERS
 # TBD: To deal with incomplete/wrong strings
 import re
 
@@ -10,7 +10,7 @@ season = str(datetime.datetime.now().year)
 # Find the competition to access the table details in the method
 url_season = "http://api.football-data.org/v1/competitions/?season="+season
 
-# headers = { 'X-Auth-Token': ADD YOUR KEY ENCLOSED WITH QUOTES HERE }
+headers = HEADERS
 
 def get_comp(comp):
 	
@@ -21,8 +21,8 @@ def get_comp(comp):
 	req_comp = comp + ' ' + year
 
 	# Use requests to get list of competitions
-	# competitions = requests.get(url_season, headers = headers)
-	competitions = requests.get(url_season)
+	competitions = requests.get(url_season, headers = headers)
+
 	# .json() method converts it into a iterable list of json objects
 	for competition in competitions.json():
 		# If competition is in the list
