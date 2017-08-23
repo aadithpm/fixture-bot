@@ -12,6 +12,23 @@ url_season = "http://api.football-data.org/v1/competitions/?season="+season
 
 headers = HEADERS
 
+# Key-value pairs to convert numeric dates to shortened months
+
+MONTHS = {
+1: 'Jan',
+2: 'Feb',
+3: 'Mar',
+4: 'Apr',
+5: 'May',
+6: 'Jun',
+7: 'Jul',
+8: 'Aug', # Insert deus ex reference here
+9: 'Sep',
+10: 'Oct',
+11: 'Nov',
+12: 'Dec'
+}
+
 def get_comp(comp):
 	
 	# Convert the year to a format like '2016/17' or 'yyyy/next yy'
@@ -52,7 +69,24 @@ def get_comp_fixtures(comp):
 			away = fixture["awayTeamName"]
 			h_goals = str(fixture["result"]["goalsHomeTeam"])
 			a_goals = str(fixture["result"]["goalsAwayTeam"])
-			print("{}  {} - {}  {}".format(home.rjust(30), h_goals, a_goals, away.ljust(30)))
+			print("{}  {} - {}  {}".format(home.rjust(30), h_goals.rjust(5), a_goals.ljust(5), away.ljust(30)))
+
+		elif fixture["status"] == "SCHEDULED":
+
+			# Assign home team, away team, date and print
+			"""
+			In the following lines of code starting from date = ... , what I'm doing is spliting a date string like '2018-05-02T18:45:00Z' into a list consisting of 2018-05-02 and 18:45:00Z. Then, I'm splitting the date component into 2018, 05, 02, replacing the 05 with the corresponding month abbreviation, reversing the list so that it's now 02, May, 2018, joining it as a string into '02 May 2018'. Then, in the second component, which is 18:45:00Z, I just replace the 'Z' with '' i.e nothing, then join the list when I'm printing so it's '02 May 2018 | 18:45:00'.
+			"""
+			home = fixture["homeTeamName"]
+			away = fixture["awayTeamName"]
+			date = fixture["date"].split('T')
+			date[0] = date[0].split('-')
+			date[0] = date[0][::-1]
+			date[0][1] = MONTHS[int(date[0][1])]
+			date[0] = ' '.join(date[0])
+			date[1] = date[1].replace('Z','')
+			date[1] = date[1][:5]
+			print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
 	
 # Tests
 #print(get_comp("Premier League")) # Should return PL data
@@ -61,5 +95,5 @@ def get_comp_fixtures(comp):
 #print(get_comp("")) # Should return -1 (duh..)
 
 print(get_comp_fixtures(get_comp("Premier League")))
-print(get_comp_fixtures(get_comp("Ligue")))
-print(get_comp_fixtures(get_comp("Ligue 1")))
+#print(get_comp_fixtures(get_comp("Ligue")))
+#print(get_comp_fixtures(get_comp("Ligue 1")))
