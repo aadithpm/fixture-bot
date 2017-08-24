@@ -38,13 +38,18 @@ def get_comp(comp):
 	req_comp = comp + ' ' + year
 
 	# Use requests to get list of competitions
-	competitions = requests.get(url_season, headers = headers)
+	try:
+		competitions = requests.get(url_season, headers = headers)
+	
+	except requests.exceptions.RequestException as ex:
+		print(ex)
+		sys.exit(1)
 
 	# .json() method converts it into a iterable list of json objects
 	for competition in competitions.json():
 		# If competition is in the list
 		if competition["caption"] == req_comp:
-			# Return the competition details
+			# Return the competition details		
 			return competition
 	# Competition was not found in list
 	return -1
@@ -59,7 +64,13 @@ def get_comp_fixtures(comp):
 	url_fixtures = "http://api.football-data.org/v1/competitions/" + str(comp["id"]) +"/fixtures"
 
 	# Get the fixtures and iterate through them, printing completed fixtures
-	r = requests.get(url_fixtures, headers = HEADERS)
+	try:
+		r = requests.get(url_fixtures, headers = HEADERS)
+	
+	except requests.exceptions.RequestException as ex:
+		print(ex)
+		sys.exit(1)
+
 	for fixture in r.json()["fixtures"]:
 		if fixture["status"] == "FINISHED":
 			
@@ -87,6 +98,10 @@ def get_comp_fixtures(comp):
 			date[1] = date[1].replace('Z','')
 			date[1] = date[1][:5]
 			print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
+
+#def get_team_fixtures(team):
+
+
 	
 # Tests
 #print(get_comp("Premier League")) # Should return PL data
@@ -94,6 +109,6 @@ def get_comp_fixtures(comp):
 #print(get_comp("Ligue 1")) # Should return Ligue 1 data
 #print(get_comp("")) # Should return -1 (duh..)
 
-print(get_comp_fixtures(get_comp("Premier League")))
+#print(get_comp_fixtures(get_comp("Premier League")))
 #print(get_comp_fixtures(get_comp("Ligue")))
-#print(get_comp_fixtures(get_comp("Ligue 1")))
+print(get_comp_fixtures(get_comp("Ligue 1")))
