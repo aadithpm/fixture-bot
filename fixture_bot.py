@@ -144,6 +144,7 @@ def get_team_fixtures(team):
 	for fixture in fixtures.json()["fixtures"]:
 		fixture_beautify(fixture)
 # Tests
+
 #print(get_comp("Premier League")) # Should return PL data
 #print(get_comp("Ligue")) # Should return -1
 #print(get_comp("Ligue 1")) # Should return Ligue 1 data
@@ -152,5 +153,5 @@ def get_team_fixtures(team):
 #print(get_comp_fixtures(get_comp("Premier League")))
 #print(get_comp_fixtures(get_comp("Ligue#")))
 #print(get_comp_fixtures(get_comp("Ligue 1")))
-print(get_team_comps("Chelsea FC"))
+#print(get_team_comps("Chelsea FC"))
 print(get_team_fixtures("Chelsea FC"))
