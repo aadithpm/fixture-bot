@@ -3,12 +3,10 @@ import requests
 from auth import HEADERS
 # TBD: To deal with incomplete/wrong strings
 import re
+import unicodedata # to deal with diacritics
 
 # We get the current year and convert it to a string so we can append it to URLs easily
 season = str(datetime.datetime.now().year)
-
-# Find the competition to access the table details in the method
-url_season = "http://api.football-data.org/v1/competitions/?season="+season
 
 headers = HEADERS
 
@@ -29,7 +27,11 @@ MONTHS = {
 12: 'Dec'
 }
 
+
 def get_comp(comp):
+
+	# Find the competition to access the table details in the method
+	url_season = "http://api.football-data.org/v1/competitions/?season="+season
 	
 	# Convert the year to a format like '2016/17' or 'yyyy/next yy'
 	year = str(season) + '/' + str(int(season[2:]) + 1)
@@ -53,7 +55,37 @@ def get_comp(comp):
 			return competition
 	# Competition was not found in list
 	return -1
+
+def get_team_comps(team):
+
+	# Key value pairs of competitions and team ids
+	comp_ids = {}
+	# Find the competition to access the table details in the method
+	url_season = "http://api.football-data.org/v1/competitions/?season="+season
+        # Use requests to get list of competitions
+	try:
+		competitions = requests.get(url_season, headers = headers)
+	except requests.exceptions.RequestException as ex:
+		print(ex)
+		sys.exit(1)
 	
+	for competition in competitions.json():
+		comp_id = str(competition["id"])
+		team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
+		try:
+			team_data = requests.get(team_url, headers = headers)
+		except requests.exceptions.RequestException as ex:
+			print(ex)
+			sys.exit(1)
+		for _team in team_data.json()["teams"]:
+			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
+			name = str(name, 'utf-8')
+			if name == team:
+				comp_ids[comp_id] = _team["name"]
+				comp_ids[_team["name"]] = _team["_links"]["fixtures"]["href"]
+
+	return comp_ids
+
 def get_comp_fixtures(comp):
 	
 	# If competition does not exist
@@ -99,8 +131,8 @@ def get_comp_fixtures(comp):
 			date[1] = date[1][:5]
 			print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
 
-#def get_team_fixtures(team):
-
+def get_team_fixtures(team):
+	pass
 
 	
 # Tests
@@ -110,5 +142,6 @@ def get_comp_fixtures(comp):
 #print(get_comp("")) # Should return -1 (duh..)
 
 #print(get_comp_fixtures(get_comp("Premier League")))
-#print(get_comp_fixtures(get_comp("Ligue")))
-print(get_comp_fixtures(get_comp("Ligue 1")))
+#print(get_comp_fixtures(get_comp("Ligue#")))
+#print(get_comp_fixtures(get_comp("Ligue 1")))
+print(get_team_comps("Chelsea FC"))
