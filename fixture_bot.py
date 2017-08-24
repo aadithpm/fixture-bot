@@ -28,6 +28,33 @@ MONTHS = {
 }
 
 
+def fixture_beautify(fixture):
+	if fixture["status"] == "FINISHED":	
+		# Assign home team, away team, result and print
+
+		home = fixture["homeTeamName"]
+		away = fixture["awayTeamName"]
+		h_goals = str(fixture["result"]["goalsHomeTeam"])
+		a_goals = str(fixture["result"]["goalsAwayTeam"])
+		print("{}  {} - {}  {}".format(home.rjust(30), h_goals.rjust(5), a_goals.ljust(5), away.ljust(30)))
+
+	elif fixture["status"] == "SCHEDULED":
+
+		# Assign home team, away team, date and print
+		"""
+		In the following lines of code starting from date = ... , what I'm doing is spliting a date string like '2018-05-02T18:45:00Z' into a list consisting of 2018-05-02 and 18:45:00Z. Then, I'm splitting the date component into 2018, 05, 02, replacing the 05 with the corresponding month abbreviation, reversing the list so that it's now 02, May, 2018, joining it as a string into '02 May 2018'. Then, in the second component, which is 18:45:00Z, I just replace the 'Z' with '' i.e nothing, then join the list when I'm printing so it's '02 May 2018 | 18:45:00'.
+		"""
+		home = fixture["homeTeamName"]
+		away = fixture["awayTeamName"]
+		date = fixture["date"].split('T')
+		date[0] = date[0].split('-')
+		date[0] = date[0][::-1]
+		date[0][1] = MONTHS[int(date[0][1])]
+		date[0] = ' '.join(date[0])
+		date[1] = date[1].replace('Z','')
+		date[1] = date[1][:5]
+		print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
+
 def get_comp(comp):
 
 	# Find the competition to access the table details in the method
@@ -104,37 +131,18 @@ def get_comp_fixtures(comp):
 		sys.exit(1)
 
 	for fixture in r.json()["fixtures"]:
-		if fixture["status"] == "FINISHED":
-			
-			# Assign home team, away team, result and print
-
-			home = fixture["homeTeamName"]
-			away = fixture["awayTeamName"]
-			h_goals = str(fixture["result"]["goalsHomeTeam"])
-			a_goals = str(fixture["result"]["goalsAwayTeam"])
-			print("{}  {} - {}  {}".format(home.rjust(30), h_goals.rjust(5), a_goals.ljust(5), away.ljust(30)))
-
-		elif fixture["status"] == "SCHEDULED":
-
-			# Assign home team, away team, date and print
-			"""
-			In the following lines of code starting from date = ... , what I'm doing is spliting a date string like '2018-05-02T18:45:00Z' into a list consisting of 2018-05-02 and 18:45:00Z. Then, I'm splitting the date component into 2018, 05, 02, replacing the 05 with the corresponding month abbreviation, reversing the list so that it's now 02, May, 2018, joining it as a string into '02 May 2018'. Then, in the second component, which is 18:45:00Z, I just replace the 'Z' with '' i.e nothing, then join the list when I'm printing so it's '02 May 2018 | 18:45:00'.
-			"""
-			home = fixture["homeTeamName"]
-			away = fixture["awayTeamName"]
-			date = fixture["date"].split('T')
-			date[0] = date[0].split('-')
-			date[0] = date[0][::-1]
-			date[0][1] = MONTHS[int(date[0][1])]
-			date[0] = ' '.join(date[0])
-			date[1] = date[1].replace('Z','')
-			date[1] = date[1][:5]
-			print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
+		fixture_beautify(fixture)
 
 def get_team_fixtures(team):
-	pass
-
-	
+	url_fixtures = get_team_comps(team)
+	url_fixtures = url_fixtures[team]
+	try:
+		fixtures = requests.get(url_fixtures, headers = headers)
+	except requests.exception.RequestException as ex:
+		print(ex)
+		sys.exit(1)
+	for fixture in fixtures.json()["fixtures"]:
+		fixture_beautify(fixture)
 # Tests
 #print(get_comp("Premier League")) # Should return PL data
 #print(get_comp("Ligue")) # Should return -1
@@ -145,3 +153,4 @@ def get_team_fixtures(team):
 #print(get_comp_fixtures(get_comp("Ligue#")))
 #print(get_comp_fixtures(get_comp("Ligue 1")))
 print(get_team_comps("Chelsea FC"))
+print(get_team_fixtures("Chelsea FC"))
