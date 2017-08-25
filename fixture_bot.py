@@ -92,10 +92,13 @@ def get_team_comps(team):
         # Use requests to get list of competitions
 	try:
 		competitions = requests.get(url_season, headers = headers)
+
 	except requests.exceptions.RequestException as ex:
 		print(ex)
 		sys.exit(1)
 	
+	# For each competition, check if team is present, add it to dictionary along with fixtures URL
+
 	for competition in competitions.json():
 		comp_id = str(competition["id"])
 		team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
@@ -105,6 +108,8 @@ def get_team_comps(team):
 			print(ex)
 			sys.exit(1)
 		for _team in team_data.json()["teams"]:
+			
+			# Replace diacritics with normal text
 			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
 			name = str(name, 'utf-8')
 			if name == team:
@@ -134,6 +139,10 @@ def get_comp_fixtures(comp):
 		fixture_beautify(fixture)
 
 def get_team_fixtures(team):
+
+	# To do: Print competition for each fixture
+	
+	# Get competitions a team is in, get the fixtures URL and display
 	url_fixtures = get_team_comps(team)
 	url_fixtures = url_fixtures[team]
 	try:
