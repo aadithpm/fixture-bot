@@ -101,29 +101,29 @@ def get_team_details(team):
 		sys.exit(1)
 	
 	# Find team details from one competition
-
-	for competition in competitions.json():
-		comp_id = str(competition["id"])
-		team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
-		try:
-			team_data = requests.get(team_url, headers = headers)
+	while not team_details:
+		for competition in competitions.json():
+			comp_id = str(competition["id"])
+			team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
+			try:
+				team_data = requests.get(team_url, headers = headers)
 		
-		except requests.exceptions.RequestException as ex:
-			print(ex)
-			sys.exit(1)
+			except requests.exceptions.RequestException as ex:
+				print(ex)
+				sys.exit(1)
 		
-		for _team in team_data.json()["teams"]:
+			for _team in team_data.json()["teams"]:
 			
-			# Replace diacritics with normal text
-			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
-			name = str(name, 'utf-8')
-			if name == team:
+				# Replace diacritics with normal text
+				name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
+				name = str(name, 'utf-8')
+				if name == team:
 				
-				team_details["name"] = _team["name"]
-				team_details["fixtures"] = _team["_links"]["fixtures"]["href"]
-				team_details["players"] = _team["_links"]["players"]["href"]
+					team_details["name"] = _team["name"]
+					team_details["fixtures"] = _team["_links"]["fixtures"]["href"]
+					team_details["players"] = _team["_links"]["players"]["href"]
 
-				return team_details
+	return team_details
 
 def get_comp_fixtures(comp):
 	
@@ -150,18 +150,57 @@ def get_team_fixtures(team):
 	# To do: Print competition for each fixture
 	
 	# Get competitions a team is in, get the fixtures URL and display
-	url_fixtures = get_team_details(team)
-	url_fixtures = url_fixtures["fixtures"]
+	team_details = get_team_details(team)
+	
+	if team_details: 
+		url_fixtures = team_details["fixtures"]
+	else:
+		return "Team does not exist"
 	try:
 		fixtures = requests.get(url_fixtures, headers = headers)
 	except requests.exception.RequestException as ex:
 		print(ex)
 		sys.exit(1)
 	for fixture in fixtures.json()["fixtures"]:
+
+		# should be returning fixtures list, printing is placeholder
+		
 		fixture_beautify(fixture)
 
 def get_squad(team):
-	pass
+
+	players = []
+	team_details = get_team_details(team)
+	
+	# get team details and squad URL
+
+	if team_details:
+		url_team = team_details["players"]
+	else:
+		return "Team does not exist"
+	
+	try:
+		squad = requests.get(url_team, headers = headers)
+	
+	except requests.exception.RequestException as ex:
+		print(ex)
+		sys.exit(1)
+
+	# For each player in squad, get name and jersey no.
+
+	for player in squad.json()["players"]:
+		if player["jerseyNumber"] is None:
+			number = 100
+		else:
+			number = player["jerseyNumber"]
+		players.append([player["name"], number])
+	
+	# Sort players by jersey number, replace '100' with '--'
+	players = list(sorted(players, key = itemgetter(1)))
+	players = [[i, str(j).replace('100','--')] for i,j in players]
+	for player in players:
+		print("{} {}".format(player[1].zfill(2), player[0].ljust(30)))
+
 
 # Tests
 
@@ -174,4 +213,6 @@ def get_squad(team):
 #print(get_comp_fixtures(get_comp("Ligue#")))
 #print(get_comp_fixtures(get_comp("Ligue 1")))
 #print(get_team_comps("Chelsea FC"))
-print(get_team_fixtures("Chelsea FC"))
+#print(get_team_fixtures("Chelsea FC"))
+#print(get_team_fixtures("FC Chelsea"))
+print(get_squad("Chelsea FC"))
