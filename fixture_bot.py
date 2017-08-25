@@ -1,6 +1,7 @@
 import datetime
 import requests
 from auth import HEADERS
+from operator import itemgetter
 # TBD: To deal with incomplete/wrong strings
 import re
 import unicodedata # to deal with diacritics
@@ -29,6 +30,7 @@ MONTHS = {
 
 
 def fixture_beautify(fixture):
+
 	if fixture["status"] == "FINISHED":	
 		# Assign home team, away team, result and print
 
@@ -54,6 +56,7 @@ def fixture_beautify(fixture):
 		date[1] = date[1].replace('Z','')
 		date[1] = date[1][:5]
 		print("{} ({}) {}".format(home.rjust(25), ' | '.join(date), away.ljust(25)))
+		print("{}".format("------------".rjust(43))) # not random number
 
 def get_comp(comp):
 
@@ -83,10 +86,10 @@ def get_comp(comp):
 	# Competition was not found in list
 	return -1
 
-def get_team_comps(team):
+def get_team_details(team):
 
-	# Key value pairs of competitions and team ids
-	comp_ids = {}
+	# Key value pairs of team details
+	team_details = {}
 	# Find the competition to access the table details in the method
 	url_season = "http://api.football-data.org/v1/competitions/?season="+season
         # Use requests to get list of competitions
@@ -97,26 +100,30 @@ def get_team_comps(team):
 		print(ex)
 		sys.exit(1)
 	
-	# For each competition, check if team is present, add it to dictionary along with fixtures URL
+	# Find team details from one competition
 
 	for competition in competitions.json():
 		comp_id = str(competition["id"])
 		team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
 		try:
 			team_data = requests.get(team_url, headers = headers)
+		
 		except requests.exceptions.RequestException as ex:
 			print(ex)
 			sys.exit(1)
+		
 		for _team in team_data.json()["teams"]:
 			
 			# Replace diacritics with normal text
 			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
 			name = str(name, 'utf-8')
 			if name == team:
-				comp_ids[comp_id] = _team["name"]
-				comp_ids[_team["name"]] = _team["_links"]["fixtures"]["href"]
+				
+				team_details["name"] = _team["name"]
+				team_details["fixtures"] = _team["_links"]["fixtures"]["href"]
+				team_details["players"] = _team["_links"]["players"]["href"]
 
-	return comp_ids
+				return team_details
 
 def get_comp_fixtures(comp):
 	
@@ -143,8 +150,8 @@ def get_team_fixtures(team):
 	# To do: Print competition for each fixture
 	
 	# Get competitions a team is in, get the fixtures URL and display
-	url_fixtures = get_team_comps(team)
-	url_fixtures = url_fixtures[team]
+	url_fixtures = get_team_details(team)
+	url_fixtures = url_fixtures["fixtures"]
 	try:
 		fixtures = requests.get(url_fixtures, headers = headers)
 	except requests.exception.RequestException as ex:
@@ -152,6 +159,10 @@ def get_team_fixtures(team):
 		sys.exit(1)
 	for fixture in fixtures.json()["fixtures"]:
 		fixture_beautify(fixture)
+
+def get_squad(team):
+	pass
+
 # Tests
 
 #print(get_comp("Premier League")) # Should return PL data
