@@ -101,29 +101,29 @@ def get_team_details(team):
 		sys.exit(1)
 	
 	# Find team details from one competition
-	while not team_details:
-		for competition in competitions.json():
-			comp_id = str(competition["id"])
-			team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
-			try:
-				team_data = requests.get(team_url, headers = headers)
+	for competition in competitions.json():
+		comp_id = str(competition["id"])
+		team_url = "http://api.football-data.org/v1/competitions/" + comp_id + "/teams/"
+		try:
+			team_data = requests.get(team_url, headers = headers)
 		
-			except requests.exceptions.RequestException as ex:
-				print(ex)
-				sys.exit(1)
+		except requests.exceptions.RequestException as ex:
+			print(ex)
+			sys.exit(1)
 		
-			for _team in team_data.json()["teams"]:
+		for _team in team_data.json()["teams"]:
 			
-				# Replace diacritics with normal text
-				name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
-				name = str(name, 'utf-8')
-				if name == team:
+			# Replace diacritics with normal text
+			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
+			name = str(name, 'utf-8')
+			if name == team:
 				
-					team_details["name"] = _team["name"]
-					team_details["fixtures"] = _team["_links"]["fixtures"]["href"]
-					team_details["players"] = _team["_links"]["players"]["href"]
+				team_details["name"] = _team["name"]
+				team_details["fixtures"] = _team["_links"]["fixtures"]["href"]
+				team_details["players"] = _team["_links"]["players"]["href"]
+				return team_details
 
-	return team_details
+	return -1
 
 def get_comp_fixtures(comp):
 	
@@ -216,3 +216,4 @@ def get_squad(team):
 #print(get_team_fixtures("Chelsea FC"))
 #print(get_team_fixtures("FC Chelsea"))
 print(get_squad("Chelsea FC"))
+print(get_squad("Arsenal FC"))
