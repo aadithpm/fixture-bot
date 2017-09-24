@@ -115,8 +115,7 @@ def get_team_details(team):
 		for _team in team_data.json()["teams"]:
 			
 			# Replace diacritics with normal text
-			name = unicodedata.normalize('NFKD', _team["name"]).encode('ascii', 'ignore')
-			name = str(name, 'utf-8')
+			name = de_accent(_team)
 			if name == team:
 				
 				team_details["name"] = _team["name"]
@@ -202,7 +201,10 @@ def get_squad(team):
 	for player in players:
 		print("{} {}".format(player[1].zfill(2), player[0].ljust(30)))
 
-
+def de_accent(team):
+	# Method to replace diacritics in name
+	name = unicodedata.normalize('NFKD', team["name"]).encode('ascii', 'ignore')
+	return str(name, 'utf-8')
 # Tests
 
 #print(get_comp("Premier League")) # Should return PL data
